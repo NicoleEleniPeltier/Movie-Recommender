@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from load_movie_data import genre_list
 
-def plot_genre_dists(df):
+def plot_genre_counts(df):
     """
     Plot number of occurrences of each genre across dataset.
 
@@ -85,9 +85,9 @@ def plot_weighted_vs_raw_rating(df):
 
     # Plot weighted vs. raw scores
     plt.figure(figsize=(8,8))
-    plt.plot([0, 1], [0, 1], color='#000000') # reference line of unity
-    plt.scatter(df['mean_rating'], df['weighted_rating'], c=np.log10(df['num_ratings']), alpha=0.2)
-
+    plt.plot([0, 1], [0, 1], color='#aaaaaa') # reference line of unity
+    plt.scatter(df['mean_rating'], df['weighted_rating'],
+                c=np.log10(df['num_ratings']), alpha=0.2)
     # Modify figure appearance
     plt.axis('square')
     plt.xlabel('Mean rating')
@@ -130,3 +130,64 @@ def plot_rating_histograms(df):
     plt.title('Distribution of weighted ratings')
     plt.xlabel('Weighted rating')
     plt.ylabel('Count');
+
+def plot_genre_heatmap(df):
+    """
+    Plot heatmap of correlations between occurrence of genres.
+
+    Parameters:
+        df (pd DataFrame): dataframe containing movie title, genre
+                        information, and rating information
+
+    Returns:
+        None
+    """
+
+    # Get list of genres
+    genres = list(genre_list(df))
+    genres.sort()
+
+    # Select genre columns from movie dataframe
+    genre_df = df[genres]
+
+    # Plot heatmap of correlations between genres
+    plt.figure(figsize=(9,7))
+    sns.heatmap(genre_df.corr(), cmap='rocket')
+    # Modify figure appearance
+    plt.title('Correlations between genres')
+    plt.show()
+
+def plot_genre_rating_heatmap(df):
+    """
+    Plot heatmap of correlations between ratings and genres.
+
+    Parameters:
+        df (pd DataFrame): dataframe containing movie title, genre
+                        information, and rating information
+
+    Returns:
+        None
+    """
+    
+    # Correlate entire dataframe
+    df_corr = df.corr()
+    
+    # Rows of dataframe to select: rating info
+    rows = ['num_ratings', 'mean_rating', 'weighted_rating']
+    
+    # Columns of dataframe to select: genres
+    genres = list(genre_list(df))
+    genres.sort()
+
+    # Select specific rows and columns of dataframe
+    df_corr = df_corr[genres].loc[rows]
+    df_corr.sort_values(by=['weighted_rating'], axis=1, ascending=False,
+                        inplace=True)
+
+    # Plot heatmap of correlations
+    plt.figure(figsize=(15,1.5))
+    sns.heatmap(df_corr)
+    # Modify figure appearance
+    plt.title('Correlation between ratings and genre')
+    plt.xlabel('Genre')
+    plt.show()
