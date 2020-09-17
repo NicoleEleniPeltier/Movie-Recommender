@@ -1,6 +1,6 @@
 # Movie Recommender System
 
-Use data from MovieLens dataset to create a movie recommender system.
+Use data from [MovieLens](https://grouplens.org/datasets/movielens/) dataset to create a movie recommender system.
 
 Included files:
 - **load_movie_data.py**: Load csv files with movie data and perform preprocessing.
