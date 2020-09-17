@@ -1,39 +1,71 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Sep 17 13:14:07 2020
+Load data from MovieLens dataset (saved locally) and perform preprocessing to
+create a movie recommender system.
 
-@author: nicol
+    @author: Nicole Peltier
+    @contact: nicole.eleni.peltier@gmail.com
+    @date: September 17, 2020
 """
 
-import re
 import pandas as pd
 import numpy as np
 
-filepath = 'C:\\Users\\nicol\\Google Drive\\Datasets\\MovieLens\\'
-
 def load_movie_data():
+    """
+    Load csv files containing movie information and rating information.
+    Preprocesses data for analysis by a movie recommender system.
+
+    Returns:
+        movies (pd DataFrame): dataframe containing movie title, genre
+                        information, and rating information
+    """
+
     # Load csv files
     filepath = 'C:\\Users\\nicol\\Google Drive\\Datasets\\MovieLens\\'
     movies = pd.read_csv(filepath + 'movies.csv')
     ratings = pd.read_csv(filepath + 'ratings.csv')
-    
+
     # Extract genres
     movies = extract_genres(movies)
-    
+
     # Compile ratings
     movies = compile_ratings(movies, ratings)
-    
+
     return movies
 
 def genre_list(df):
+    """
+    Generate list of genres from dataframe.
 
-    # Extract genres from list
+    Parameters:
+        df (pd DataFrame): dataframe containing genres listed for each movie
+
+    Returns:
+        genre_flat_list (set): set of unique genres that appear in dataframe
+    """
+
+    # Each movie's genre is initially coded as "Comedy|Romance|Animation"
+    # Convert each movie's genre to a list: ["Comedy", "Romance", "Animation"]
     genre_lists = pd.Series([x.split('|') for x in df['genres']])
+
+    # Find unique occurrences across all movies
     genre_flat_list = set([item for sublist in genre_lists for item in sublist])
 
     return genre_flat_list
 
 def extract_genres(df):
+    """
+    Convert each movie's genres to a one-hot representation.
+
+    Parameters:
+        df (pd DataFrame): dataframe of movie information
+
+    Returns:
+        df (pd DataFrame): updated dataframe with one column for each genre;
+                        samples that were labeled as a given genre have 1 in
+                        that genre's column, otherwise 0
+    """
 
     # Extract genres from list
     genre_lists = pd.Series([x.split('|') for x in df['genres']])
@@ -45,29 +77,38 @@ def extract_genres(df):
     return df
 
 def compile_ratings(movies_df, ratings_df):
-    """ Compute weighted ratings according to IMDB's rules
     """
-    
+    Compute weighted ratings according to IMDB's formula.
+
+    Parameters:
+        movies_df (pd DataFrame): dataframe of movie information
+        ratings_df (pd DataFrame): dataframe of rating information
+
+    Returns:
+        movies_df (pd DataFrame): updated movie dataframe with rating information added
+    """
+
     # Compute mean rating, number of ratings, mean score across all ratings
     mean_rating = ratings_df.groupby('movieId')['rating'].mean() / 5 # Scale 0-1
     num_ratings = ratings_df.groupby('movieId')['rating'].count()
     mean_across_movies = np.mean(ratings_df['rating']) / 5 # Scale 0-1
-    
+
     # Minimum number of ratings needed to be considered
     m = 10
-    
+
     # Compute weighted rating
     weighted_rating = (num_ratings / (num_ratings + m) * mean_rating) + (m / (num_ratings + m) * mean_across_movies)
-    
+
     # Put values together in dataframe
     rating_summary = mean_rating.reset_index()
     rating_summary = rating_summary.merge(num_ratings, how='inner', left_on='movieId', right_on='movieId')
     rating_summary = rating_summary.merge(weighted_rating, how='inner', left_on='movieId', right_on='movieId')
+
     # Set column names
     rating_summary.columns = ['movieId', 'mean_rating', 'num_ratings', 'weighted_rating']
-    
+
     # Add rating dataframe to movies dataframe
     # Outer merge to be safe for now, might change to inner merge if there's no use for movies without ratings
     movies_df = movies_df.merge(rating_summary, how='outer', left_on='movieId', right_on='movieId')
-    
+
     return movies_df
