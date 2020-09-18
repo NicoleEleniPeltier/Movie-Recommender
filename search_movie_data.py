@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Search movie data, filtering by genre and tags, and return highest-rated movie.
+Search movie data, filtering by genres and tags, and return highest-rated movies.
 
     @author: Nicole Peltier
     @contact: nicole.eleni.peltier@gmail.com
