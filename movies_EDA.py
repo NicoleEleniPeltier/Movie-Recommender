@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from load_movie_data import genre_list
 
-def plot_genre_counts(df):
+def genre_counts_barplot(df):
     """
     Plot number of occurrences of each genre across dataset.
 
@@ -42,8 +42,9 @@ def plot_genre_counts(df):
     plt.ylabel('Count')
     for item in genre_plot.get_xticklabels():
         item.set_rotation(75)
+    plt.show()
 
-def plot_genre_count_per_movie(df):
+def genre_count_per_movie_barplot(df):
     """
     Plot distribution of number of genres assigned to each movie in dataset.
 
@@ -69,8 +70,69 @@ def plot_genre_count_per_movie(df):
     plt.title('Number of genres per movie')
     plt.xlabel('Number of genres')
     plt.ylabel('Count')
+    plt.show()
 
-def plot_weighted_vs_raw_rating(df):
+def genre_heatmap(df):
+    """
+    Plot heatmap of correlations between occurrence of genres.
+
+    Parameters:
+        df (pd DataFrame): dataframe containing movie title, genre
+                        information, and rating information
+
+    Returns:
+        None
+    """
+
+    # Get list of genres
+    genres = list(genre_list(df))
+    genres.sort()
+
+    # Select genre columns from movie dataframe
+    genre_df = df[genres]
+
+    # Plot heatmap of correlations between genres
+    plt.figure(figsize=(9,7))
+    sns.heatmap(genre_df.corr(), cmap='rocket')
+    # Modify figure appearance
+    plt.title('Correlations between genres')
+    plt.show()
+
+def num_ratings_histogram(df):
+    """
+    Plot histogram of number of ratings assigned to each movie.
+
+    Parameters:
+        df (pd DataFrame): dataframe containing movie title, genre
+                        information, and rating information
+
+    Returns:
+        None
+    """
+
+    # Create figure
+    plt.figure(figsize=(12, 4))
+
+    # Subplot 1: linear scale
+    plt.subplot(1, 2, 1)
+    sns.distplot(df['num_ratings'], kde=False)
+    # Modify figure appearance
+    plt.title('Distribution of number of ratings (linear scale)')
+    plt.xlabel('Number of ratings')
+    plt.ylabel('Count')
+
+    # Subplot 2: log scale
+    plt.subplot(1, 2, 2)
+    # Define bins in log space
+    bins = np.logspace(0, 5, 50)
+    sns.distplot(df['num_ratings'], kde=False, bins=bins)
+    plt.xscale('log')
+    # Modify figure appearance
+    plt.title('Distribution of number of ratings (log scale)')
+    plt.xlabel('Number of ratings')
+    plt.ylabel('Count')
+
+def weighted_vs_raw_rating_scatter(df):
     """
     Create scatterplot of weighted ratings (per IMDB's formula) vs. mean of
     raw ratings.
@@ -96,9 +158,10 @@ def plot_weighted_vs_raw_rating(df):
     cbar = plt.colorbar()
     cbar.set_alpha(1)
     cbar.draw_all()
-    cbar.ax.set_ylabel('# of ratings (log10)', rotation=270);
+    cbar.ax.set_ylabel('# of ratings (log10)', rotation=270)
+    plt.show()
 
-def plot_rating_histograms(df):
+def ratings_histogram(df):
     """
     Plot histograms of mean raw ratings and weighted ratings (per IMDB's formula).
 
@@ -129,35 +192,10 @@ def plot_rating_histograms(df):
     plt.xlim((0, 1))
     plt.title('Distribution of weighted ratings')
     plt.xlabel('Weighted rating')
-    plt.ylabel('Count');
-
-def plot_genre_heatmap(df):
-    """
-    Plot heatmap of correlations between occurrence of genres.
-
-    Parameters:
-        df (pd DataFrame): dataframe containing movie title, genre
-                        information, and rating information
-
-    Returns:
-        None
-    """
-
-    # Get list of genres
-    genres = list(genre_list(df))
-    genres.sort()
-
-    # Select genre columns from movie dataframe
-    genre_df = df[genres]
-
-    # Plot heatmap of correlations between genres
-    plt.figure(figsize=(9,7))
-    sns.heatmap(genre_df.corr(), cmap='rocket')
-    # Modify figure appearance
-    plt.title('Correlations between genres')
+    plt.ylabel('Count')
     plt.show()
 
-def plot_genre_rating_heatmap(df):
+def genre_rating_heatmap(df):
     """
     Plot heatmap of correlations between ratings and genres.
 
