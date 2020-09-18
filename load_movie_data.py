@@ -11,6 +11,9 @@ create a movie recommender system.
 import pandas as pd
 import numpy as np
 
+filepath = 'C:\\Users\\nicol\\Google Drive\\Datasets\\MovieLens\\'
+filepath_large = 'C:\\Users\\nicol\\Google Drive\\Datasets\\MovieLens-Large\\'
+
 def load_movie_data():
     """
     Load csv files containing movie information and rating information.
@@ -22,7 +25,6 @@ def load_movie_data():
     """
 
     # Load csv files
-    filepath = 'C:\\Users\\nicol\\Google Drive\\Datasets\\MovieLens\\'
     movies = pd.read_csv(filepath + 'movies.csv')
     ratings = pd.read_csv(filepath + 'ratings.csv')
 
@@ -31,6 +33,8 @@ def load_movie_data():
 
     # Compile ratings
     movies = compile_ratings(movies, ratings)
+    
+    # Load tags and create tag soup
 
     return movies
 
@@ -110,5 +114,58 @@ def compile_ratings(movies_df, ratings_df):
     # Add rating dataframe to movies dataframe
     # Outer merge to be safe for now, might change to inner merge if there's no use for movies without ratings
     movies_df = movies_df.merge(rating_summary, how='outer', left_on='movieId', right_on='movieId')
+
+    return movies_df
+
+def process_tag(string):
+    """
+    Convert user-written tags to lowercase strings without punctuation or
+    spaces. Function allows list comprehension of tags in load_tags().
+
+    Parameters:
+        string (str): tag written by user
+
+    Returns:
+        string (str): updated tag with punctuation and spaces removed
+    """
+
+    # Convert string to lowercase
+    string = string.lower()
+
+    # List of characters to replace in string
+    chars_to_replace = " &-!,.?'():;"
+
+    # Loop through characters to be replaced
+    for ch in chars_to_replace:
+        string = string.replace(ch, '')
+
+    return string
+
+def load_tags(movies_df):
+    """
+    Load tags assigned by users and pool them within movies.
+
+    Parameters:
+        movies_df (pd DataFrame): dataframe of movie information
+
+    Returns:
+        movies_df (pd DataFrame): updated dataframe with new column 'tag_soup'
+    """
+
+    # Load tags from larger dataset
+    filepath_large = 'C:\\Users\\nicol\\Google Drive\\Datasets\\MovieLens-Large\\'
+    tags = pd.read_csv(filepath_large + 'tags.csv')
+
+    # Remove punctuation
+    tags['tag_soup'] = [process_tag(str(x)) for x in tags['tag']]
+
+    # Join all tags for same movie
+    tag_soup = tags.groupby(['movieId'])['tag_soup'].apply(' '.join).reset_index()
+
+    # Merge tag soup with movies df
+    movies_df = movies_df.merge(tag_soup, how='inner', left_on='movieId', right_on='movieId')
+
+    # Replace nan with ''
+    movies_df['tag_soup'] = movies_df['tag_soup'].fillna('')
 
     return movies_df
