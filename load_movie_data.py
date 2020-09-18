@@ -33,9 +33,17 @@ def load_movie_data():
 
     # Compile ratings
     movies = compile_ratings(movies, ratings)
-    
+
     # Load tags and create tag soup
     movies = load_tags(movies)
+
+    # Remove year from title and add year column
+    movies['year'] = movies['title'].str.extract(r'[(]([0-9]{4})[)]')
+    movies['title'] = movies['title'].str.replace(r' [(][0-9]{4}.*[)]', '')
+
+    # Remove 13 rows with NaN for year, convert year to int
+    movies = movies.dropna()
+    movies.loc[:,'year'] = movies['year'].astype(int)
 
     return movies
 
