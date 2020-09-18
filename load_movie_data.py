@@ -35,6 +35,7 @@ def load_movie_data():
     movies = compile_ratings(movies, ratings)
     
     # Load tags and create tag soup
+    movies = load_tags(movies)
 
     return movies
 
@@ -133,7 +134,7 @@ def process_tag(string):
     string = string.lower()
 
     # List of characters to replace in string
-    chars_to_replace = " &-!,.?'():;"
+    chars_to_replace = " &-!,.?'():;*"
 
     # Loop through characters to be replaced
     for ch in chars_to_replace:
