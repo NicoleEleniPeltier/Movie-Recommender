@@ -26,7 +26,7 @@ def load_movie_data():
 
     # Load csv files
     movies = pd.read_csv(filepath + 'movies.csv')
-    ratings = pd.read_csv(filepath + 'ratings.csv')
+    ratings = pd.read_csv(filepath_large + 'ratings.csv')
 
     # Extract genres
     movies = extract_genres(movies)
@@ -99,7 +99,7 @@ def compile_ratings(movies_df, ratings_df):
     mean_across_movies = np.mean(ratings_df['rating']) / 5 # Scale 0-1
 
     # Minimum number of ratings needed to be considered
-    m = 10
+    m = 200
 
     # Compute weighted rating
     weighted_rating = (num_ratings / (num_ratings + m) * mean_rating) + (m / (num_ratings + m) * mean_across_movies)
@@ -114,7 +114,7 @@ def compile_ratings(movies_df, ratings_df):
 
     # Add rating dataframe to movies dataframe
     # Outer merge to be safe for now, might change to inner merge if there's no use for movies without ratings
-    movies_df = movies_df.merge(rating_summary, how='outer', left_on='movieId', right_on='movieId')
+    movies_df = movies_df.merge(rating_summary, how='left', left_on='movieId', right_on='movieId')
 
     return movies_df
 
