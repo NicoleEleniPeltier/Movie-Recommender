@@ -7,5 +7,6 @@ Included files:
 - **movies_EDA.py**: Functions to plot features of movie dataset.
 - **Exploratory-Data-Analysis.ipynb**: Collection of figures generated from exploratory data analysis.
 - **Simple-Recommender.ipynb**: Recommender that returns titles of highest-rated movies in given genre or genres.
+- **Content-Based-Recommender.ipynb**: Recommender that returns similar titles based on user-assigned tags.
 
 **Note**: This is my first time using git through the command line, so please bear with me if things don't look right quite yet.
