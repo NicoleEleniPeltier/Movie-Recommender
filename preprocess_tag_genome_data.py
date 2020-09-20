@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Preprocess genome tag data and save in csv
+Preprocess genome tag data and save in csv file.
 
     @author: Nicole Peltier
     @contact: nicole.eleni.peltier@gmail.com
@@ -8,7 +8,7 @@ Preprocess genome tag data and save in csv
 """
 
 import pandas as pd
-from load_movie_data import process_tag
+from preprocess_movie_data import process_tag
 
 def load_genome_tags():
     """

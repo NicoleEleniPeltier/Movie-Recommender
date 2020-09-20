@@ -59,28 +59,28 @@ def clean_title(string):
         string (str): movie title
 
     Returns:
-        title_proc (str): cleaned movie title
+        title_clean (str): cleaned movie title
     """
 
     # Remove endings of strings that end with ", The" and ", A"
-    title_proc = string.replace(r', The$', '')
-    title_proc = title_proc.replace(r', A$', '')
+    title_clean = string.replace(r', The$', '')
+    title_clean = title_clean.replace(r', A$', '')
 
     # Remove starts of strings that begin with "A " and "The "
-    title_proc = title_proc.replace(r'^The ', '')
-    title_proc = title_proc.replace(r'^A ', '')
+    title_clean = title_clean.replace(r'^The ', '')
+    title_clean = title_clean.replace(r'^A ', '')
 
     # Make strings lowercase
-    title_proc = title_proc.lower()
+    title_clean = title_clean.lower()
 
     # Remove/replace punctuation
     chars_to_replace = ".,:'?!"
     for ch in chars_to_replace:
-        title_proc = title_proc.replace(ch, '')
-    title_proc = title_proc.replace(' -', '')
-    title_proc = title_proc.replace('-', ' ')
+        title_clean = title_clean.replace(ch, '')
+    title_clean = title_clean.replace(' -', '')
+    title_clean = title_clean.replace('-', ' ')
 
-    return title_proc
+    return title_clean
 
 def genre_list(df):
     """
@@ -197,7 +197,6 @@ def load_tags(movies_df):
     """
 
     # Load tags from larger dataset
-    filepath_large = 'C:\\Users\\nicol\\Google Drive\\Datasets\\MovieLens-Large\\'
     tags = pd.read_csv(filepath_large + 'tags.csv')
 
     # Remove punctuation
@@ -213,3 +212,12 @@ def load_tags(movies_df):
     movies_df['tag_soup'] = movies_df['tag_soup'].fillna('')
 
     return movies_df
+
+def main():
+    movie_data = load_movie_data()
+    
+    # Save preprocessed data
+    movie_data.to_csv('movies_preprocessed.csv', index=False)
+
+if __name__ == "__main__":
+    main()
