@@ -11,8 +11,8 @@ create a movie recommender system.
 import pandas as pd
 import numpy as np
 
-filepath = 'C:\\Users\\nicol\\Google Drive\\Datasets\\MovieLens\\'
-filepath_large = 'C:\\Users\\nicol\\Google Drive\\Datasets\\MovieLens-Large\\'
+FILEPATH = 'C:\\Users\\nicol\\Google Drive\\Datasets\\MovieLens\\'
+FILEPATH_LARGE = 'C:\\Users\\nicol\\Google Drive\\Datasets\\MovieLens-Large\\'
 
 def load_movie_data():
     """
@@ -25,8 +25,8 @@ def load_movie_data():
     """
 
     # Load csv files
-    movies = pd.read_csv(filepath + 'movies.csv')
-    ratings = pd.read_csv(filepath_large + 'ratings.csv')
+    movies = pd.read_csv(FILEPATH + 'movies.csv')
+    ratings = pd.read_csv(FILEPATH_LARGE + 'ratings.csv')
 
     # Extract genres
     movies = extract_genres(movies)
@@ -43,7 +43,7 @@ def load_movie_data():
 
     # Remove 13 rows with NaN for year, convert year to int
     movies = movies.dropna()
-    movies.loc[:,'year'] = movies['year'].astype(int)
+    movies.loc[:, 'year'] = movies['year'].astype(int)
 
     # Store cleaned version of title with lowercase letters and no punctuation
     movies['title_clean'] = movies['title'].apply(clean_title)
@@ -121,7 +121,7 @@ def extract_genres(df):
     # Loop through genres and see which movies have genre listed
     for genre in genre_list(df):
         df[genre] = pd.Series([genre in x for x in genre_lists]).astype(int)
-    
+
     return df
 
 def compile_ratings(movies_df, ratings_df):
@@ -145,19 +145,24 @@ def compile_ratings(movies_df, ratings_df):
     m = 200
 
     # Compute weighted rating
-    weighted_rating = (num_ratings / (num_ratings + m) * mean_rating) + (m / (num_ratings + m) * mean_across_movies)
+    weighted_rating = ((num_ratings / (num_ratings + m) * mean_rating) +
+                       (m / (num_ratings + m) * mean_across_movies))
 
     # Put values together in dataframe
     rating_summary = mean_rating.reset_index()
-    rating_summary = rating_summary.merge(num_ratings, how='inner', left_on='movieId', right_on='movieId')
-    rating_summary = rating_summary.merge(weighted_rating, how='inner', left_on='movieId', right_on='movieId')
+    rating_summary = rating_summary.merge(num_ratings, how='inner',
+                                          left_on='movieId', right_on='movieId')
+    rating_summary = rating_summary.merge(weighted_rating, how='inner',
+                                          left_on='movieId', right_on='movieId')
 
     # Set column names
     rating_summary.columns = ['movieId', 'mean_rating', 'num_ratings', 'weighted_rating']
 
     # Add rating dataframe to movies dataframe
-    # Outer merge to be safe for now, might change to inner merge if there's no use for movies without ratings
-    movies_df = movies_df.merge(rating_summary, how='left', left_on='movieId', right_on='movieId')
+    # Outer merge to be safe for now, might change to inner merge if there's
+    # no use for movies without ratings
+    movies_df = movies_df.merge(rating_summary, how='left',
+                                left_on='movieId', right_on='movieId')
 
     return movies_df
 
@@ -197,7 +202,7 @@ def load_tags(movies_df):
     """
 
     # Load tags from larger dataset
-    tags = pd.read_csv(filepath_large + 'tags.csv')
+    tags = pd.read_csv(FILEPATH_LARGE + 'tags.csv')
 
     # Remove punctuation
     tags['tag_soup'] = [process_tag(str(x)) for x in tags['tag']]
@@ -214,8 +219,12 @@ def load_tags(movies_df):
     return movies_df
 
 def main():
+    """
+    Main function of module. Load movie data, process ratings and user tags,
+    save preprocessed data.
+    """
     movie_data = load_movie_data()
-    
+
     # Save preprocessed data
     movie_data.to_csv('movies_preprocessed.csv', index=False)
 

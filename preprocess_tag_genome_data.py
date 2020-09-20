@@ -28,23 +28,23 @@ def load_genome_tags():
 
     return genome_tag_df
 
-def get_relevant_tag_soup(df):
+def get_relevant_tag_soup(tag_df):
     """
     Generate soup of tags for each movie with relevance scores of at least 0.75.
 
     Parameters:
-        df (pd DataFrame): dataframe of relevance score for each tag
+        tag_df (pd DataFrame): dataframe of relevance score for each tag
 
     Returns:
-        df (pd DataFrame): updated dataframe with new column 'relevant_tag_soup'
+        tag_df (pd DataFrame): updated dataframe with new column 'relevant_tag_soup'
     """
 
     soup = []
 
     # Loop through movies, collect tags with relevance >= 0.75
-    for i in range(df.shape[0]):
-        x = df.loc[i].squeeze().sort_values(ascending=False)
-        relevant_tags = list(x[x>=0.75].index)
+    for i in range(tag_df.shape[0]):
+        movie_tag_scores = tag_df.loc[i].squeeze().sort_values(ascending=False)
+        relevant_tags = list(movie_tag_scores[movie_tag_scores >= 0.75].index)
         # Make tags lowercase, remove punctuation
         tag_list = [process_tag(x) for x in relevant_tags]
         # Join list of tags into soup
@@ -69,7 +69,8 @@ def main():
     # Select just movieId and title_clean to match rows of movie dataframe with
     # rows of tag dataframe
     movie_id_title = movie_df[['movieId', 'title_clean']]
-    movie_genome_tags = movie_id_title.merge(genome_tag_df.reset_index(), how='left', left_on='movieId', right_on='movieId')
+    movie_genome_tags = movie_id_title.merge(genome_tag_df.reset_index(), how='left',
+                                             left_on='movieId', right_on='movieId')
 
     # Create soup of for each movie of tags with relevance of at least 0.75
     tag_names = genome_tag_df.columns.values
