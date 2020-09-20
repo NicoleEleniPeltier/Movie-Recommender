@@ -45,7 +45,42 @@ def load_movie_data():
     movies = movies.dropna()
     movies.loc[:,'year'] = movies['year'].astype(int)
 
+    # Store cleaned version of title with lowercase letters and no punctuation
+    movies['title_clean'] = movies['title'].apply(clean_title)
+
     return movies
+
+def clean_title(string):
+    """
+    Clean movie title to make user searches more fool-proof. Convert to
+    lowercase, remove "the" and "a" from start of title, and remove punctuation.
+
+    Parameters:
+        string (str): movie title
+
+    Returns:
+        title_proc (str): cleaned movie title
+    """
+
+    # Remove endings of strings that end with ", The" and ", A"
+    title_proc = string.replace(r', The$', '')
+    title_proc = title_proc.replace(r', A$', '')
+
+    # Remove starts of strings that begin with "A " and "The "
+    title_proc = title_proc.replace(r'^The ', '')
+    title_proc = title_proc.replace(r'^A ', '')
+
+    # Make strings lowercase
+    title_proc = title_proc.lower()
+
+    # Remove/replace punctuation
+    chars_to_replace = ".,:'?!"
+    for ch in chars_to_replace:
+        title_proc = title_proc.replace(ch, '')
+    title_proc = title_proc.replace(' -', '')
+    title_proc = title_proc.replace('-', ' ')
+
+    return title_proc
 
 def genre_list(df):
     """
