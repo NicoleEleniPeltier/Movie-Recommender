@@ -10,7 +10,7 @@ Plot features of MovieLens dataset for exploratory data analysis.
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from load_movie_data import genre_list
+from preprocess_movie_data import genre_list
 
 def genre_counts_barplot(df):
     """
