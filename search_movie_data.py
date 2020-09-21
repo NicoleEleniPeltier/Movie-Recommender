@@ -8,7 +8,10 @@ Search movie data, filtering by genres and tags, and return highest-rated movies
 """
 
 import numpy as np
+import pandas as pd
 from preprocess_movie_data import clean_title
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 def filter_genre(movies_df, genres):
     """
@@ -245,3 +248,38 @@ def search_title(movies_df, s):
         # If user says it isn't a match, return nothing
         print("Sorry I couldn't help")
         return None
+
+def get_similar_titles(movies_df, title, field='tag_soup', num_movies=10):
+    """
+    Return titles of movies that are similar to a given movie, given their
+    user-assigned tags.
+
+    Parameters:
+        movies_df (pd DataFrame): dataframe of movie information
+        title (str): title to search
+        field (str): field of movies_df containing tags, optional (default = 'tag_soup')
+        num_movies (int): number of results to return, optional (default = 10)
+
+    Returns:
+        pd Series of titles of movies most similar to input title
+    """
+
+    # Find movie index based on title
+    movie_ind = search_title(movies_df, title)
+
+    # Compute cosine similarity with other movies
+    count = CountVectorizer(stop_words='english')
+    count_matrix = count.fit_transform(movies_df['tag_soup'])
+    count_matrix_select_movie = count_matrix[movie_ind, :]
+
+    # Compute cosine similarity between movie and all others
+    cos_sim = cosine_similarity(count_matrix, count_matrix_select_movie)
+
+    # Create dataframe of movies and cosine similarity, sort by similarity
+    movie_similarity = pd.DataFrame({'movieId': movies_df['movieId'],
+                                     'title': movies_df['title'],
+                                     'cos_sim': np.squeeze(cos_sim)})
+    movie_similarity = movie_similarity.sort_values(by=['cos_sim'], ascending=False)
+
+    # Return top matches
+    return movie_similarity['title'][1:num_movies+1]
