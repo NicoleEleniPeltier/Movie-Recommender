@@ -68,16 +68,19 @@ def main():
 
     # Select just movieId and title_clean to match rows of movie dataframe with
     # rows of tag dataframe
-    movie_id_title = movie_df[['movieId', 'title_clean']]
+    movie_id_title = movie_df[['movieId', 'title', 'title_clean', 'year']]
     movie_genome_tags = movie_id_title.merge(genome_tag_df.reset_index(), how='left',
                                              left_on='movieId', right_on='movieId')
 
     # Create soup of for each movie of tags with relevance of at least 0.75
     tag_names = genome_tag_df.columns.values
-    movie_genome_tags['relevant_tag_soup'] = get_relevant_tag_soup(movie_genome_tags[tag_names])
+    relevant_soup = get_relevant_tag_soup(movie_genome_tags[tag_names])
+    movie_genome_tags['relevant_tag_soup'] = relevant_soup
+    movie_df['relevant_tag_soup'] = relevant_soup
 
     # Save preprocessed data
     movie_genome_tags.to_csv('tag_genome_preprocessed.csv', index=False)
+    movie_df.to_csv('movies_preprocessed.csv', index=False)
 
 if __name__ == "__main__":
     main()
