@@ -10,6 +10,7 @@ create a movie recommender system.
 
 import pandas as pd
 import numpy as np
+import re
 
 FILEPATH = 'C:\\Users\\nicol\\Google Drive\\Datasets\\MovieLens\\'
 FILEPATH_LARGE = 'C:\\Users\\nicol\\Google Drive\\Datasets\\MovieLens-Large\\'
@@ -63,12 +64,12 @@ def clean_title(string):
     """
 
     # Remove endings of strings that end with ", The" and ", A"
-    title_clean = string.replace(r', The$', '')
-    title_clean = title_clean.replace(r', A$', '')
+    title_clean = re.sub(', The$', '', string)
+    title_clean = re.sub(', A$', '', title_clean)
 
     # Remove starts of strings that begin with "A " and "The "
-    title_clean = title_clean.replace(r'^The ', '')
-    title_clean = title_clean.replace(r'^A ', '')
+    title_clean = re.sub('^The ', '', title_clean)
+    title_clean = re.sub('^A ', '', title_clean)
 
     # Make strings lowercase
     title_clean = title_clean.lower()
