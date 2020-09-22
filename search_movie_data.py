@@ -29,13 +29,13 @@ def filter_genre(movies_df, genres):
 
     # If just one genre given, simple filter
     if isinstance(genres, str):
-        return movies_df[movies_df[genres.capitalize()] == 1]
+        return movies_df[movies_df[genres] == 1]
 
     # If list of genres, filter iteratively
     df_filtered = movies_df.copy()
     # Loop through genres in list
     for g in genres:
-        df_filtered = df_filtered[df_filtered[g.capitalize()] == 1]
+        df_filtered = df_filtered[df_filtered[g] == 1]
 
     return df_filtered
 
