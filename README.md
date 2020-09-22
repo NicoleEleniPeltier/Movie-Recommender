@@ -1,7 +1,7 @@
 # Movie Recommender System
 
 Use data from [MovieLens](https://grouplens.org/datasets/movielens/) dataset to create a movie
-recommender system. Per MovieLens's terms, I have not uploaded their datasets, but the data is
+recommender system. Per MovieLens's terms, I have not uploaded their datasets, but the data are
 freely available on their website.
 
 ## Data Preprocessing
@@ -63,4 +63,12 @@ genre(s) or with given tag(s).
 - **Content-Based-Recommender.ipynb**: Recommender that returns similar titles based on
 user-assigned tags or genome tags.
 
-**Note**: This is my first time using git through the command line, so please bear with me if things don't look right quite yet.
+## Graphical User Interface (GUI)
+
+Generate a GUI that allows users to search for movies as implemented in Simple-Recommender.ipynb
+and Content-Based-Recommender.ipynb.
+
+Files:
+- **Recommender-GUI.ipynb**: Implement features of recommender with GUI.
+	- Select genres with checkboxes and search highest-rated movies in genres.
+	- Search movie by title and return movie ID.
