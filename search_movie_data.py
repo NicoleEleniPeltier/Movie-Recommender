@@ -65,7 +65,7 @@ def filter_tag(movies_df, tags):
 
     return df_filtered
 
-def highest_rated(movies_df, genres=None, tags=None):
+def highest_rated(movies_df, genres=None, tags=None, num_movies=5):
     """
     Find highest rated movies of given genres and tags
 
@@ -75,6 +75,7 @@ def highest_rated(movies_df, genres=None, tags=None):
                         'Comedy' or ['Comedy', 'Romance'])
         tags (str or list of str): tags by which to filter movies (e.g.,
                         'funny' or ['hughgrant', 'juliaroberts'])
+        num_movies (int): number of movies to return
 
     Returns:
         pd.Series of titles of highest rated moves of given genres and tags
@@ -90,14 +91,13 @@ def highest_rated(movies_df, genres=None, tags=None):
 
     # Sort movies by rating
     df_sorted = movies_df.sort_values(by=['weighted_rating'], ascending=False)
-    num_movies = df_sorted.shape[0]
 
     # If fewer than 5 movies, return all
-    if num_movies < 5:
+    if df_sorted.shape[0] < num_movies:
         return df_sorted['title']
 
     # If at least 5 movies, return 5
-    return df_sorted.iloc[:5]['title']
+    return df_sorted.iloc[:num_movies]['title']
 
 def levenshtein_ratio(s, t):
     """
@@ -148,7 +148,7 @@ def search_title(movies_df, s):
         s (str): title to search
 
     Returns:
-        index (int) of movie with matching title (if there is a match)
+        movieId (int) of selected movie
     """
 
     # First, search for exact match between user input and movie titles
@@ -157,7 +157,7 @@ def search_title(movies_df, s):
 
     # If there is exactly one match, return index
     if num_matches == 1:
-        return movie_ind[0]
+        return movies_df['movieId'][movie_ind[0]]
 
     # If there is more than one exact match, ask user to select one
     if num_matches > 1:
@@ -176,7 +176,7 @@ def search_title(movies_df, s):
         # Parse user's choice as int, select movie index
         choice = int(x)
         if choice in ind_dict.keys():
-            return ind_dict[choice]
+            return movies_df['movieId'][ind_dict[choice]]
 
     # If no exact matches, perform fuzzy string matching
     else:
@@ -211,7 +211,7 @@ def search_title(movies_df, s):
 
             # If user says it's a match, return index
             if user_input.lower() == 'y':
-                return select_movies['index'][0]
+                return select_movies['movieId'][0]
 
             # If user says it isn't a match, return nothing
             print("Sorry I couldn't help")
@@ -243,16 +243,63 @@ def search_title(movies_df, s):
         # Parse user's choice as int, select movie index
         choice = int(x)
         if choice in ind_dict.keys():
-            return ind_dict[choice]
+            return movies_df['movieId'][ind_dict[choice]]
 
         # If user says it isn't a match, return nothing
         print("Sorry I couldn't help")
         return None
 
-def get_similar_titles(movies_df, title, field='tag_soup', num_movies=10):
+def get_most_relevant_tags(tags_df, title, num_tags=10):
+    """
+    Get list of most relevant tags for a given movie.
+
+    Parameters:
+        tags_df (pd.DataFrame): dataframe containing tag relevance scores for
+                        each movie
+        title (str): movie title to search
+        num_tags (int): number of relevant tags to return, optional (default = 10)
+
+    Returns:
+        pd.Series of most relevant tags for movie, index is tag name and value
+                        is relevance score
+    """
+
+    # Get movie ID that corresponds to title
+    movieId = search_title(tags_df, title)
+
+    # Get list of tags
+    tag_names = tags_df.drop(['movieId', 'title', 'title_clean', 'year', 'relevant_tag_soup'],
+                             axis=1).columns.values
+    
+    # Slice row with movie
+    movie = tags_df[tags_df['movieId']==movieId]
+
+    # Get series of tags, sort in order of relevance to movie
+    x = movie[tag_names].squeeze().sort_values(ascending=False)
+
+    # Return series of most relevant tags
+    return x[:num_tags]
+
+def get_relevant_tag_soup(movies_df, title):
+    """
+    Get list of most tags with a relevance score of at least 0.75 for a given movie.
+
+    Parameters:
+        movies_df (pd.DataFrame): dataframe containing movie title and tag soup
+        title (str): movie title to search
+
+    Returns:
+        str containing all relevant tags
+    """
+
+    movieId = search_title(movies_df, title)
+    return movies_df[movies_df['movieId']==movieId]['relevant_tag_soup'].values[0]
+
+def get_similar_movies(movies_df, title, how='tag_soup', field='tag_soup', num_movies=10):
     """
     Return titles of movies that are similar to a given movie, given their
-    user-assigned tags.
+    user-assigned tags. Note: movies dataframe may be pre-filtered for genre
+    or tags.
 
     Parameters:
         movies_df (pd DataFrame): dataframe of movie information
@@ -261,25 +308,115 @@ def get_similar_titles(movies_df, title, field='tag_soup', num_movies=10):
         num_movies (int): number of results to return, optional (default = 10)
 
     Returns:
-        pd Series of titles of movies most similar to input title
+        pd DataFrame of movies most similar to input title
     """
 
-    # Find movie index based on title
-    movie_ind = search_title(movies_df, title)
+    # Reset index of movies_df in case any filtering of df has already happened
+    # and indices are not consecutive
+    movies_df = movies_df.reset_index().drop('index', axis=1)
 
-    # Compute cosine similarity with other movies
+    # Find movie ID based on title
+    movieId = search_title(movies_df, title)
+
+    # If no movie could be found, raise error
+    if movieId is None:
+        raise Exception("Sorry, no movie found. Movie may not be in dataframe or may not match filters.")
+
+    movie_ind = movies_df.index[movies_df['movieId'] == movieId][0]
+
+    if how == 'tag_soup':
+        related_ids = get_similar_tag_soup(movies_df, movie_ind, field, num_movies)
+    elif how == 'tag_relevance':
+        related_ids = get_similar_tag_relevance(movies_df, movieId, num_movies)
+    else:
+        raise Exception("Invalid method: {}".format(how))
+
+    related_movies = movies_df[movies_df['movieId'].isin(related_ids)]
+
+    return related_movies
+
+def get_similar_titles(movies_df, title, how='tag_soup', field='tag_soup', num_movies=10):
+    """
+    Create titles of movies that are similar to input title.
+
+    Parameters:
+        movies_df (pd DataFrame): dataframe of movie information
+        title (str): title to search
+        field (str): field of movies_df containing tags, optional (default = 'tag_soup')
+        num_movies (int): number of results to return, optional (default = 10)
+
+    Returns:
+        pd.Series of titles of movies most similar to input title
+    """
+
+    # Get dataframe of similar movies
+    related_movies = get_similar_movies(movies_df, title, how, field, num_movies)
+
+    # Return titles
+    return related_movies['title']
+    
+
+def get_similar_tag_soup(movies_df, movie_ind, field='tag_soup', num_movies=10):
+    """
+    Find movies that have similar assigned tags to a target movie.
+
+    Parameters:
+        movies_df (pd DataFrame): dataframe of movie information
+        movie_ind (int): index of target movie in dataframe
+        field (str): field of movies_df containing tags, optional (default = 'tag_soup')
+        num_movies (int): number of results to return, optional (default = 10)
+
+    Returns:
+        pd Series of movieId of most similar movies
+    """
+
+    # Tokenize words in tag soup
     count = CountVectorizer(stop_words='english')
-    count_matrix = count.fit_transform(movies_df['tag_soup'])
+    count_matrix = count.fit_transform(movies_df[field])
     count_matrix_select_movie = count_matrix[movie_ind, :]
 
-    # Compute cosine similarity between movie and all others
+    # Compute cosine similarity between target movie and all others
     cos_sim = cosine_similarity(count_matrix, count_matrix_select_movie)
 
     # Create dataframe of movies and cosine similarity, sort by similarity
     movie_similarity = pd.DataFrame({'movieId': movies_df['movieId'],
-                                     'title': movies_df['title'],
                                      'cos_sim': np.squeeze(cos_sim)})
     movie_similarity = movie_similarity.sort_values(by=['cos_sim'], ascending=False)
 
     # Return top matches
-    return movie_similarity['title'][1:num_movies+1]
+    return movie_similarity['movieId'][1:num_movies+1]
+
+def get_similar_tag_relevance(genome_df, movieId, num_movies=10):
+    """
+    Find movies that have similar assigned tags to a target movie.
+
+    Parameters:
+        movies_df (pd DataFrame): dataframe of movie information
+        movieId (int): identification number of target movie
+        num_movies (int): number of results to return, optional (default = 10)
+
+    Returns:
+        pd Series of movieId of most similar movies
+    """
+
+    # Drop rows without tag genome relevance scores
+    gen_data = genome_df.dropna().reset_index()
+
+    # Get index of movie in dataframe
+    movie_ind = np.squeeze(gen_data.index[gen_data['movieId']==movieId])
+
+    # Convert relevance scores to matrix
+    gen_data_matrix = gen_data.drop(['index', 'movieId', 'title', 'title_clean', 'relevant_tag_soup'], axis=1).values
+    # Extract row for target movie
+    gen_data_select_movie = gen_data_matrix[movie_ind,:].reshape(1, -1)
+
+    # Compute cosine similarity between target movie and all others
+    cos_sim = cosine_similarity(gen_data_matrix, gen_data_select_movie)
+
+    # Create dataframe of movieId and cosine similarity, sort by similarity
+    movie_similarity = pd.DataFrame({'movieId': gen_data['movieId'],
+                                     'cos_sim': np.squeeze(cos_sim)})
+    movie_similarity = movie_similarity.sort_values(by=['cos_sim'], ascending=False)
+
+    # Return top matches
+    return movie_similarity['movieId'][1:num_movies+1]
