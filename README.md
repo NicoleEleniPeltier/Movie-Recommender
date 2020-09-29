@@ -66,7 +66,7 @@ user-assigned tags or genome tags.
 ## Graphical User Interface (GUI)
 
 Generate a GUI that allows users to search for movies as implemented in Simple-Recommender.ipynb
-and Content-Based-Recommender.ipynb.
+and Content-Based-Recommender.ipynb. This is a work very much in progress.
 
 Files:
 - **Recommender-GUI.ipynb**: Implement features of recommender with GUI.
